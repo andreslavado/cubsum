@@ -53,7 +53,8 @@
             matrices3D = new Array();
             t = 0;
             output = "";
-            testcases = undefined;           
+            testcases = undefined;
+            $('.cubesummation-toast').remove();       
         }
 
         //Limpia datos ingresados
@@ -68,22 +69,42 @@
 
         //Función principal, captura los datos de entrada y ejecuta los Test Cases
         function run() {
-            init();
-            //Divide los datos de entrada en lineas para procesarlas después
-            var lines = $('#inputarea').val().split(/\n/);
-            //La primer linea representa el valor T
-            t = lines[0];
-            //Se crean los T casos de prueba (Test Case)
-            testcases = createTestCases(t, lines);
-            //Se procesan los Test Case, por cada uno se crea una matrix 3D y se aplican las operaciones que corresponden
-            for (var i = 0; i < testcases.length; i++) {
-                matrices3D.push(generateMatrix(testcases[i].n));
-                applyOperations(testcases[i].operations, i);
+            try{
+                init();
+                //Divide los datos de entrada en lineas para procesarlas después
+                var intext = $('#inputarea').val();
+                if($.trim(intext).length == 0){
+                    throw 'Por favor ingrese una entrada valida.';
+                }
+                var lines = intext.split(/\n/);
+                //La primer linea representa el valor T
+                t = lines[0];
+
+                if(!isNumber(t)){
+                    throw 'T= \''+t+'\' no es un valor numérico valido.';
+                }
+                else{
+                    //validar regla para T
+                    if(!(t>=1 && t<=50)){
+                        throw 'El valor de \'T\' debe estar entre 1 y 50, valor actual: '+t;
+                    }
+                }
+
+                //Se crean los T casos de prueba (Test Case)
+                testcases = createTestCases(t, lines);
+                //Se procesan los Test Case, por cada uno se crea una matrix 3D y se aplican las operaciones que corresponden
+                for (var i = 0; i < testcases.length; i++) {
+                    matrices3D.push(generateMatrix(testcases[i].n));
+                    applyOperations(testcases[i].operations, i);
+                }
+                //Se muestra la salida tras aplicar las operaciones
+                $('#outputarea').val(output);
+                $('#outputarea').trigger('autoresize');
+                $('#outputarea').focus();
             }
-            //Se muestra la salida tras aplicar las operaciones
-            $('#outputarea').val(output);
-            $('#outputarea').trigger('autoresize');
-            $('#outputarea').focus();
+            catch(err) {
+                showErrorMessage(err);
+            }
 
         }
         //Se crean los T casos de prueba
@@ -97,6 +118,25 @@
                 var nm = lines[pos].split(" ");
                 var n = nm[0];
                 var m = nm[1];
+
+                //Validar reglas para N y M
+                if(!isNumber(n)){
+                    throw 'N= \''+n+'\' no es un valor numérico valido.';
+                }
+                else{
+                    if(!(t>=1 && t<=100)){
+                        throw 'El valor de \'N\' debe estar entre 1 y 100, valor actual: '+n;
+                    }
+                }
+                if(!isNumber(m)){
+                    throw 'M= \''+m+'\' no es un valor numérico valido.';
+                }
+                else{
+                    if(!(m>=1 && m<=1000)){
+                        throw 'El valor de \'M\' debe estar entre 1 y 1000, valor actual: '+m;
+                    }
+                }
+
                 //Arreglo que contiene las operaciones
                 var operations = new Array();
                 pos++;
@@ -133,14 +173,21 @@
         function applyOperations(operations, index) {
             for (var i = 0; i < operations.length; i++) {
                 var operation = operations[i];
-
-                if (operation[0].toUpperCase() === "UPDATE") {
-                    applyUpdate(operation, index);
-                } else {
-                    if (operation[0].toUpperCase() === "QUERY") {
-                        var sum = applyQuery(operation, index);
-                        output += sum+"\n";
+                if(isString(operation[0])){
+                    if (operation[0].toUpperCase() === "UPDATE") {
+                        applyUpdate(operation, index);
+                    } else {
+                        if (operation[0].toUpperCase() === "QUERY") {
+                            var sum = applyQuery(operation, index);
+                            output += sum+"\n";
+                        }
+                        else{
+                            throw operation[0]+' no es una operación valida';
+                        }
                     }
+                }
+                else{
+                    throw operation[0]+' no es una operación valida';
                 }
             }
         }
@@ -150,6 +197,23 @@
             var y = operation[2];
             var z = operation[3];
             var w = operation[4];
+            if(!isNumber(x) || !isNumber(y) || !isNumber(z) || !isNumber(w)){
+                throw 'Los valores de X, Y, Z y W para la operación UPDATE deben ser numéricos, valores actules: ['+x+', '+y+', '+z+'], W='+w;
+            }
+            else{
+                if(!(x >= 1 && x <= matrices3D[index].length)){
+                    throw 'Se debe cumplir la regla \'1 <= X <= N\', valores actuales X='+x+', N='+matrices3D[index].length;
+                }
+                if(!(y >= 1 && y <= matrices3D[index].length)){
+                    throw 'Se debe cumplir la regla \'1 <= Y <= N\', valores actuales Y='+y+', N='+matrices3D[index].length;
+                }
+                if(!(z >= 1 && z <= matrices3D[index].length)){
+                    throw 'Se debe cumplir la regla \'1 <= Z <= N\', valores actuales Z='+z+', N='+matrices3D[index].length;
+                }
+                if(!(w >= -1000000000 && w <= 1000000000)){
+                    throw 'Se debe cumplir la regla \'-10<sup>9</sup> <= W <= 10<sup>9</sup>\', valores actuales W='+w;
+                }
+            }
             matrices3D[index][x - 1][y - 1][z - 1] = w;
         }
         //Aplica operación QUERY
@@ -160,6 +224,23 @@
             var x2 = operation[4];
             var y2 = operation[5];
             var z2 = operation[6];
+
+            //Validar reglas 1 <= x1 <= x2 <= N
+
+            if(!isNumber(x1) || !isNumber(x2) || !isNumber(y1) || !isNumber(y2) || !isNumber(z1) || !isNumber(z2)){
+                throw 'Los valores de X1 y X2, Y1 y Y2, Z1 y Z2 para la operación QUERY deben ser numéricos, valores actules: ['+x1+', '+x2+'], ['+y1+', '+y2+'], ['+z1+', '+z2+']';
+            }
+            else{
+                if(!(x1 >= 1 && x1 <= matrices3D[index].length && x1 <= x2)){
+                    throw 'El valor debe cumplir la regla \'1 <= x1 <= x2 <= N\', valores actuales: ['+x1+', '+x2+'], N='+matrices3D[index].length;
+                }
+                if(!(y1 >= 1 && y1 <= matrices3D[index].length && y1 <= y2)){
+                    throw 'El valor debe cumplir la regla \'1 <= y1 <= y2 <= N\', valores actuales: ['+y1+', '+y2+'], N='+matrices3D[index].length;
+                }
+                if(!(z1 >= 1 && z1 <= matrices3D[index].length && z1 <= z2)){
+                    throw 'El valor debe cumplir la regla \'1 <= z1 <= z2 <= N\', valores actuales: ['+z1+', '+z2+'], N='+matrices3D[index].length;
+                }
+            }
 
             var sum = 0;
             //Se buscan las celdas que esten entre x1, x2, y1, y2, z1 y z2
@@ -172,6 +253,21 @@
                 }
             }
             return sum;
+        }
+        //Funciones Utilitarias
+        
+        var toString = Object.prototype.toString;
+        //Valida si una variable es de tipo String
+        function isString(obj) {
+            return toString.call(obj) == '[object String]';
+        }
+        //valida si una variable es de tipo numérico
+        function isNumber(obj){
+            return +obj === +obj;
+        }
+        //Muestra mensaje de error
+        function showErrorMessage(message){
+            Materialize.toast(message, 10000, 'red darken-3 cubesummation-toast');
         }
     </script>
 </body>
