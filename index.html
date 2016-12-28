@@ -48,7 +48,7 @@
     <script type="text/javascript" src="js/materialize.min.js"></script>
     <script type="text/javascript">
         var matrices3D, t, testcases, output;
-
+        // Inicializa variables globales;
         function init() {
             matrices3D = new Array();
             t = 0;
@@ -56,6 +56,7 @@
             testcases = undefined;           
         }
 
+        //Limpia datos ingresados
         function clean(){
             init();
             $('#outputarea').val(" ");
@@ -65,26 +66,58 @@
             $('#inputarea').focus();
         }
 
+        //Función principal, captura los datos de entrada y ejecuta los Test Cases
         function run() {
             init();
+            //Divide los datos de entrada en lineas para procesarlas después
             var lines = $('#inputarea').val().split(/\n/);
+            //La primer linea representa el valor T
             t = lines[0];
+            //Se crean los T casos de prueba (Test Case)
             testcases = createTestCases(t, lines);
-
+            //Se procesan los Test Case, por cada uno se crea una matrix 3D y se aplican las operaciones que corresponden
             for (var i = 0; i < testcases.length; i++) {
                 matrices3D.push(generateMatrix(testcases[i].n));
                 applyOperations(testcases[i].operations, i);
             }
-
+            //Se muestra la salida tras aplicar las operaciones
             $('#outputarea').val(output);
             $('#outputarea').trigger('autoresize');
             $('#outputarea').focus();
 
         }
-
+        //Se crean los T casos de prueba
+        function createTestCases(t, lines) {
+            //Arreglo que contiene los casos de prueba
+            var testcases = new Array();
+            //Posición de lectura de la linea, arranca en 1 pues la linea 0 equivale a T
+            var pos = 1;
+            for (var i = 0; i < t; i++) {
+                //Se lee la linea que contiene los valores N y M, separados por un espacio
+                var nm = lines[pos].split(" ");
+                var n = nm[0];
+                var m = nm[1];
+                //Arreglo que contiene las operaciones
+                var operations = new Array();
+                pos++;
+                //Se leen las operaciones
+                for (var j = 0; j < m; j++ , pos++) {
+                    operations.push(lines[pos].split(" "));
+                }
+                //Se crea el caso de prueba con los datos leidos
+                var testcase = {
+                    n: n,
+                    m: m,
+                    operations: operations
+                };
+                //Se almacena el caso de prueba
+                testcases.push(testcase);
+            }
+            return testcases;
+        }
+        //Crea la matriz 3D
         function generateMatrix(n) {
             var matrix3D = new Array();
-
             for (x = 0; x < n; x++) {
                 matrix3D.push(new Array());
                 for (y = 0; y < n; y++) {
@@ -96,35 +129,7 @@
             }
             return matrix3D;
         }
-
-        function createTestCases(t, lines) {
-            var testcases = new Array();
-            var pos = 1;
-
-            for (var i = 0; i < t; i++) {
-                var nm = lines[pos].split(" ");
-                var n = nm[0];
-                var m = nm[1];
-                var operations = new Array();
-                pos++;
-
-                for (var j = 0; j < m; j++ , pos++) {
-                    operations.push(lines[pos].split(" "));
-                }
-
-                var testcase = {
-                    n: n,
-                    m: m,
-                    operations: operations
-                };
-
-                testcases.push(testcase);
-            }
-
-
-            return testcases;
-        }
-
+        //Aplica las operaciones
         function applyOperations(operations, index) {
             for (var i = 0; i < operations.length; i++) {
                 var operation = operations[i];
@@ -137,10 +142,9 @@
                         output += sum+"\n";
                     }
                 }
-
             }
         }
-
+        //Aplica operación UPDATE
         function applyUpdate(operation, index) {
             var x = operation[1];
             var y = operation[2];
@@ -148,7 +152,7 @@
             var w = operation[4];
             matrices3D[index][x - 1][y - 1][z - 1] = w;
         }
-
+        //Aplica operación QUERY
         function applyQuery(operation, index) {
             var x1 = operation[1];
             var y1 = operation[2];
@@ -158,11 +162,12 @@
             var z2 = operation[6];
 
             var sum = 0;
+            //Se buscan las celdas que esten entre x1, x2, y1, y2, z1 y z2
             for (x = x1; x <= x2; x++) {
                 for (y = y1; y <= y2; y++) {
                     for (z = z1; z <= z2; z++) {
                         var value = parseInt(matrices3D[index][x - 1][y - 1][z - 1]);
-                        sum += value;             
+                        sum += value;        
                     }
                 }
             }
@@ -170,5 +175,4 @@
         }
     </script>
 </body>
-
 </html>
