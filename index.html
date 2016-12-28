@@ -1,18 +1,190 @@
 <!DOCTYPE html>
-  <html>
-	<head>
-	<!--Import Google Icon Font-->
-	<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-	<!--Import materialize.css-->
-	<link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+<html>
 
-	<!--Let browser know website is optimized for mobile-->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-	</head>
+<head>
+    <!--Import Google Icon Font-->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <body>
-		<!--Import jQuery before materialize.js-->
-		<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-		<script type="text/javascript" src="js/materialize.min.js"></script>
-    </body>
-  </html>
+    <style>
+	</style>
+</head>
+
+<body>
+    <nav class="teal darken-2">
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo center">Cube Summation</a>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col s6">
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="inputarea" class="materialize-textarea"></textarea>
+                    <label for="inputarea">Input</label>
+                </div>
+            </div>
+            <div class="row">
+                <a class="waves-effect waves-light teal darken-2 btn" onclick="run()"><i class="material-icons left">play_arrow</i>Run</a>
+                <a class="waves-effect waves-light teal darken-2 btn" onclick="clean()"><i class="material-icons left">replay</i></a>
+            </div>
+        </div>
+        <div class="col s6">
+            <div id="outputdiv" class="row">
+                <div class="input-field col s12">
+                    <textarea id="outputarea" class="materialize-textarea"></textarea>
+                    <label for="outputarea">Output</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Import jQuery before materialize.js-->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script type="text/javascript">
+        var matrices3D, t, testcases, output;
+
+        function init() {
+            matrices3D = new Array();
+            t = 0;
+            output = "";
+            testcases = undefined;           
+        }
+
+        function clean(){
+            init();
+            $('#outputarea').val(" ");
+            $('#outputarea').trigger('autoresize'); 
+            $('#inputarea').val("");
+            $('#inputarea').trigger('autoresize');
+            $('#inputarea').focus();
+        }
+
+        function run() {
+            init();
+            var lines = $('#inputarea').val().split(/\n/);
+            t = lines[0];
+            testcases = createTestCases(t, lines);
+            // console.log(testcases);
+
+            for (var i = 0; i < testcases.length; i++) {
+                matrices3D.push(generateMatrix(testcases[i].n, i));
+                applyOperations(testcases[i].operations, i);
+            }
+
+            $('#outputarea').val(output);
+            $('#outputarea').trigger('autoresize');
+            $('#outputarea').focus();
+
+        }
+
+        function generateMatrix(n, index) {
+            var matrix3D = new Array();
+
+            for (x = 0; x < n; x++) {
+                matrix3D.push(new Array());
+                for (y = 0; y < n; y++) {
+                    matrix3D[x].push(new Array());
+                    for (z = 0; z < n; z++) {
+                        matrix3D[x][y].push(0);
+                    }
+                }
+            }
+            return matrix3D;
+        }
+
+        function createTestCases(t, lines) {
+            var testcases = new Array();
+            var pos = 1;
+
+            for (var i = 0; i < t; i++) {
+                var nm = lines[pos].split(" ");
+                var n = nm[0];
+                var m = nm[1];
+                var operations = new Array();
+                pos++;
+
+                for (var j = 0; j < m; j++ , pos++) {
+                    operations.push(lines[pos].split(" "));
+                }
+
+                var testcase = {
+                    n: n,
+                    m: m,
+                    operations: operations
+                };
+
+                testcases.push(testcase);
+            }
+
+
+            return testcases;
+        }
+
+        function applyOperations(operations, index) {
+            console.log("Apply Operations - Test Case #"+(index+1));
+            for (var i = 0; i < operations.length; i++) {
+                var operation = operations[i];
+
+                if (operation[0].toUpperCase() === "UPDATE") {
+                    applyUpdate(operation, index);
+                } else {
+                    if (operation[0].toUpperCase() === "QUERY") {
+                        var sum = applyQuery(operation, index);
+                        console.log(sum);
+                        output += sum+"\n";
+                    }
+                }
+
+            }
+        }
+
+        function applyUpdate(operation, index) {
+            var x = operation[1];
+            var y = operation[2];
+            var z = operation[3];
+            var w = operation[4];
+            matrices3D[index][x - 1][y - 1][z - 1] = w;
+            console.log("Apply Update ["+x+", "+y+", "+z+"] = "+w);
+        }
+
+        function applyQuery(operation, index) {
+            var x1 = operation[1];
+            var y1 = operation[2];
+            var z1 = operation[3];
+            var x2 = operation[4];
+            var y2 = operation[5];
+            var z2 = operation[6];
+
+            console.log("Sumatory Between: ["+x1+", "+y1+", "+z1+"] & ["+x2+", "+y2+", "+z2+"]");
+
+            var sum = 0;
+            var txt = "";
+            for (x = x1; x <= x2; x++) {
+                for (y = y1; y <= y2; y++) {
+                    for (z = z1; z <= z2; z++) {
+                        var value = parseInt(matrices3D[index][x - 1][y - 1][z - 1]);
+                        sum += value;
+                        txt += "+ "+value;              
+                    }
+                }
+            }
+
+            console.log("Sum: "+txt);
+
+            return sum;
+
+        }
+
+        function sumBetween(i1, i2, j1, j2, k1, k2, index, ready) {
+            var sum = 0;
+            
+            return sum;
+        }
+    </script>
+</body>
+
+</html>
